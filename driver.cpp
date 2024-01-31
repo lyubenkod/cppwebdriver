@@ -5,22 +5,12 @@
 #include <iostream>
 #include <stdexcept>
 
-static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
-{
-    ((std::string*)userp)->append((char*)contents, size * nmemb);
-    return size * nmemb;
-}
 void inline reset_curl_handle(CURL* curl, std::string& output_buffer){
-	curl_easy_reset(curl);
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &output_buffer);
 }
 
 webdriver::webdriver(){
     curl_global_init(CURL_GLOBAL_DEFAULT);
     curl = curl_easy_init();
-	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
     if(!curl){
 		printf("Curl not init.\n");
         curl_global_cleanup();
@@ -34,7 +24,6 @@ webdriver::~webdriver(){
 }
 
 Json::Value webdriver::start_session(){
-	reset_curl_handle(curl,readBuffer);
 	Json::Value msg;
 	Json::Value capabilities;
 	
@@ -67,21 +56,28 @@ Json::Value webdriver::stop_session(){
 }
 
 Json::Value webdriver::status(){
-	reset_curl_handle(curl, readBuffer);
 	return curl_patterns::get(curl,readBuffer,DRIVER_IP+"/status");
 }
 
 Json::Value webdriver::get_timeouts(){
-	reset_curl_handle(curl, readBuffer);
 	return curl_patterns::get(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/timeouts");
 }
 
-Json::Value webdriver::set_timeouts(){
-	reset_curl_handle(curl,readBuffer);
+Json::Value webdriver::set_timeouts(int implicit, int pageLoad, int script){
 	Json::Value msg;
-	msg["implicit"] = 0;
-	msg["pageLoad"] = 150000;
-	msg["script"] = 15000;
+	msg["implicit"] = implicit;
+	msg["pageLoad"] = pageLoad;
+	msg["script"] = script;
 
 	return curl_patterns::post(curl, readBuffer, DRIVER_IP+"/session/" + session["sessionId"].asString()+"/timeouts",msg);
+}
+
+Json::Value webdriver::navigate_to(std::string url){
+	Json::Value msg;
+	msg["url"] = url;
+
+	return curl_patterns::post(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/url",msg);
+}
+Json::Value webdriver::get_url(){
+	return curl_patterns::get(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/url");
 }

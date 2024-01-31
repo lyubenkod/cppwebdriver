@@ -17,5 +17,7 @@ public:
     Json::Value stop_session();
     Json::Value status();
     Json::Value get_timeouts();
-    Json::Value set_timeouts();
+    Json::Value set_timeouts(int implicit, int pageLoad, int script);
+    Json::Value navigate_to(std::string url);
+    Json::Value get_url();
 };

@@ -3,7 +3,16 @@
 #include <curl/curl.h>
 
 namespace curl_patterns {
+static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+    ((std::string*)userp)->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
 inline Json::Value get(CURL* curl, std::string& readBuffer, std::string url){
+	curl_easy_reset(curl);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
 	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,"GET");
 	curl_easy_setopt(curl,CURLOPT_URL,url.c_str());
 	auto rescode = curl_easy_perform(curl);
@@ -16,12 +25,15 @@ inline Json::Value get(CURL* curl, std::string& readBuffer, std::string url){
 	if(!reader.parse(readBuffer,response)){
 		throw std::runtime_error("Failed to parse json response!");
 	}
-	//TODO reader cant parse {"value":null};
 	readBuffer.erase();
 
 	return response["value"];
 }
 inline Json::Value post(CURL* curl, std::string& readBuffer, std::string url,Json::Value message){
+	curl_easy_reset(curl);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+
 	struct curl_slist* list = NULL;
 	list = curl_slist_append(list, "Content-Type: aplication/json");
 	std::string msg_str = message.toStyledString();
@@ -36,7 +48,6 @@ inline Json::Value post(CURL* curl, std::string& readBuffer, std::string url,Jso
 	}
 	curl_slist_free_all(list);
 
-    // std::cout << readBuffer << std::endl;
 	Json::Value response;
 	Json::Reader reader;
 	if(!reader.parse(readBuffer,response)){
