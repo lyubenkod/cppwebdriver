@@ -1,0 +1,7 @@
+!.gitignore
+driver/
+compile_commands.json
+main
+project
+.*
+.o
