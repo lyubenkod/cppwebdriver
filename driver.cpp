@@ -1,15 +1,19 @@
 #include "driver.hpp"
+#include "curl_patterns.hpp"
 #include <curl/curl.h>
 #include <curl/easy.h>
 #include <iostream>
-#include <json/reader.h>
-#include <json/writer.h>
 #include <stdexcept>
 
 static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *userp)
 {
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
+}
+void inline reset_curl_handle(CURL* curl, std::string& output_buffer){
+	curl_easy_reset(curl);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &output_buffer);
 }
 
 webdriver::webdriver(){
@@ -30,54 +34,54 @@ webdriver::~webdriver(){
 }
 
 Json::Value webdriver::start_session(){
-	struct curl_slist* list = NULL;
+	reset_curl_handle(curl,readBuffer);
 	Json::Value msg;
 	Json::Value capabilities;
 	
 	capabilities["browserName"] = "firefox";
 	msg["capabilities"] = capabilities;
-	std::string msg_str = msg.toStyledString();
 
-	list = curl_slist_append(list, "Content-Type: aplication/json");
-
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
-	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,"POST");
-	curl_easy_setopt(curl, CURLOPT_URL,(DRIVER_IP+"/session").c_str());
-	curl_easy_setopt(curl, CURLOPT_POSTFIELDS,msg_str.c_str());
-	auto rescode = curl_easy_perform(curl);
-	if(rescode != CURLE_OK){
-		std::cout << "Something went wrong: " << rescode << std::endl;
-	}
-    // std::cout << readBuffer << std::endl;
-	Json::Value response;
-	Json::Reader reader;
-	if(!reader.parse(readBuffer,response)){
-		throw std::runtime_error("Failed to parse json response!");
-	}
-	readBuffer.erase();
-	session = response["value"];
+	session = curl_patterns::post(curl,readBuffer,DRIVER_IP+"/session",msg);
 
 	return session;
 }
 
 Json::Value webdriver::stop_session(){
-	auto new_curl = curl_easy_init();
-	curl_easy_setopt(new_curl, CURLOPT_CUSTOMREQUEST,"DELETE");
-	curl_easy_setopt(new_curl, CURLOPT_URL, (DRIVER_IP+"/session/"+(session["sessionId"].asString())).c_str());
-	auto rescode = curl_easy_perform(new_curl);
+	reset_curl_handle(curl,readBuffer);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,"DELETE");
+	curl_easy_setopt(curl, CURLOPT_URL, (DRIVER_IP+"/session/"+(session["sessionId"].asString())).c_str());
+	auto rescode = curl_easy_perform(curl);
 	if(rescode != CURLE_OK){
 		std::cout << "Something went wrong: " << rescode << std::endl;
 	}
 
 	Json::Value response;
 	Json::Reader reader;
-	std::cout << readBuffer << std::endl;
 	if(!reader.parse(readBuffer,response)){
 		throw std::runtime_error("Failed to parse json response!");
 	}
 	//TODO reader cant parse {"value":null};
 	readBuffer.erase();
-	curl_easy_cleanup(new_curl);
 
 	return response["value"];
+}
+
+Json::Value webdriver::status(){
+	reset_curl_handle(curl, readBuffer);
+	return curl_patterns::get(curl,readBuffer,DRIVER_IP+"/status");
+}
+
+Json::Value webdriver::get_timeouts(){
+	reset_curl_handle(curl, readBuffer);
+	return curl_patterns::get(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/timeouts");
+}
+
+Json::Value webdriver::set_timeouts(){
+	reset_curl_handle(curl,readBuffer);
+	Json::Value msg;
+	msg["implicit"] = 0;
+	msg["pageLoad"] = 150000;
+	msg["script"] = 15000;
+
+	return curl_patterns::post(curl, readBuffer, DRIVER_IP+"/session/" + session["sessionId"].asString()+"/timeouts",msg);
 }

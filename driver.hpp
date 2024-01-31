@@ -15,4 +15,7 @@ public:
 
     Json::Value start_session();
     Json::Value stop_session();
+    Json::Value status();
+    Json::Value get_timeouts();
+    Json::Value set_timeouts();
 };
