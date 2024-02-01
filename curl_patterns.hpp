@@ -8,7 +8,7 @@ static size_t WriteCallback(void *contents, size_t size, size_t nmemb, void *use
     ((std::string*)userp)->append((char*)contents, size * nmemb);
     return size * nmemb;
 }
-inline Json::Value get(CURL* curl, std::string& readBuffer, std::string url){
+inline Json::Value send_get(CURL* curl, std::string& readBuffer, std::string url){
 	curl_easy_reset(curl);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
@@ -29,7 +29,7 @@ inline Json::Value get(CURL* curl, std::string& readBuffer, std::string url){
 
 	return response["value"];
 }
-inline Json::Value post(CURL* curl, std::string& readBuffer, std::string url,Json::Value message){
+inline Json::Value send_post(CURL* curl, std::string& readBuffer, std::string url,Json::Value message){
 	curl_easy_reset(curl);
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
@@ -47,6 +47,26 @@ inline Json::Value post(CURL* curl, std::string& readBuffer, std::string url,Jso
 		throw std::runtime_error("Something went wrong: " + std::to_string(rescode));
 	}
 	curl_slist_free_all(list);
+
+	Json::Value response;
+	Json::Reader reader;
+	if(!reader.parse(readBuffer,response)){
+		throw std::runtime_error("Failed to parse json response!");
+	}
+	readBuffer.erase();
+
+	return response["value"];
+}
+inline Json::Value send_delete(CURL* curl, std::string& readBuffer, std::string url){
+	curl_easy_reset(curl);
+	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+	curl_easy_setopt(curl, CURLOPT_WRITEDATA, &readBuffer);
+	curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST,"DELETE");
+	curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+	auto rescode = curl_easy_perform(curl);
+	if(rescode != CURLE_OK){
+		throw std::runtime_error("Something went wrong: " + std::to_string(rescode));
+	}
 
 	Json::Value response;
 	Json::Reader reader;

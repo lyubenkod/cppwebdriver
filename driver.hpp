@@ -20,4 +20,8 @@ public:
     Json::Value set_timeouts(int implicit, int pageLoad, int script);
     Json::Value navigate_to(std::string url);
     Json::Value get_url();
+    Json::Value go_back();
+    Json::Value go_forward();
+    Json::Value refresh();
+    Json::Value title();
 };
