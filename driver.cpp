@@ -1,7 +1,8 @@
 #include "driver.hpp"
 #include "curl_patterns.hpp"
 #include <curl/curl.h>
-#include <stdexcept>
+#include <json/json.h>
+#include <json/value.h>
 
 webdriver::webdriver(){
     curl_global_init(CURL_GLOBAL_DEFAULT);
@@ -61,19 +62,13 @@ Json::Value webdriver::get_url(){
 	return curl_patterns::send_get(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/url");
 }
 Json::Value webdriver::go_back(){
-	Json::Value msg;
-	msg["text"] = "Hello :)";
-	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/back",msg);
+	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/back",Json::objectValue);
 }
 Json::Value webdriver::go_forward(){
-	Json::Value msg;
-	msg["text"] = "Hello :)";
-	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/forward",msg);
+	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/forward",Json::objectValue);
 }
 Json::Value webdriver::refresh(){
-	Json::Value msg;
-	msg["text"] = "Hello :)";
-	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/refresh",msg);
+	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/refresh",Json::objectValue);
 }
 Json::Value webdriver::title(){
 	return curl_patterns::send_get(curl,readBuffer,DRIVER_IP+"/session/"+session["sessionId"].asString()+"/title");
@@ -97,47 +92,52 @@ Json::Value webdriver::get_window_handles(){
 }
 
 // options for hint: "tab" | "window"
-Json::Value webdriver::new_window(){
+Json::Value webdriver::new_window(std::string hint){
 	Json::Value msg;
-	msg["hint"] = "tab";
+	msg["hint"] = hint;
 	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/new",msg);
 }
 
 // Json::Value webdriver::switch_to_frame(){
+// 	Json::Value msg;
+// 	msg["id"] = 1;
 // 	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/frame",msg);
 // }
 
-// Json::Value webdriver::switch_to_parent_frame(){
-// 	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/frame/parent",msg);
-// }
+Json::Value webdriver::switch_to_parent_frame(){
+	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/frame/parent",Json::objectValue);
+}
 
-// Json::Value webdriver::get_window_rect(){
-// 	return curl_patterns::send_get(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/rect");
-// }
+Json::Value webdriver::get_window_rect(){
+	return curl_patterns::send_get(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/rect");
+}
 
-// Json::Value webdriver::set_window_rect(){
-// 	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/rect",msg);
-// }
+Json::Value webdriver::set_window_rect(int width, int height){
+	Json::Value msg;
+	msg["width"] = width;
+	msg["height"] = height;
+	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/rect",msg);
+}
 
-// Json::Value webdriver::maximize_window(){
-// 	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/maximize",msg);
-// }
+Json::Value webdriver::maximize_window(){
+	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/maximize",Json::objectValue);
+}
 
-// Json::Value webdriver::minimize_window(){
-// 	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/minimize",msg);
-// }
+Json::Value webdriver::minimize_window(){
+	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/minimize",Json::objectValue);
+}
 
-// Json::Value webdriver::fullscreen_window(){
-// 	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/fullscreen",msg);
-// }
+Json::Value webdriver::fullscreen_window(){
+	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/window/fullscreen",Json::objectValue);
+}
 
-// Json::Value webdriver::get_active_element(){
-// 	return curl_patterns::send_get(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/element/active");
-// }
+Json::Value webdriver::get_active_element(){
+	return curl_patterns::send_get(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/element/active");
+}
 
-// Json::Value webdriver::get_element_shadow_root(){
-// 	return curl_patterns::send_get(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/element/{element id}/shadow");
-// }
+Json::Value webdriver::get_element_shadow_root(std::string element_id){
+	return curl_patterns::send_get(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/element/"+element_id+"/shadow");
+}
 
 // Json::Value webdriver::find_element(){
 // 	return curl_patterns::send_post(curl,readBuffer,DRIVER_IP + "/session/" + session["sessionId"].asString() + "/element",msg);
