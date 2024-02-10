@@ -10,6 +10,13 @@ class webdriver{
     const std::string DRIVER_IP = "127.0.0.1:4444";
 
 public:
+    enum selector{
+        css_selector,
+        link_text,
+        partial_link_text,
+        tag_name,
+        xpath
+    };
     webdriver();
     ~webdriver();
 
@@ -38,26 +45,26 @@ public:
     Json::Value fullscreen_window();
     Json::Value get_active_element();
     Json::Value get_element_shadow_root(std::string element_id);
-    // Json::Value find_element();
-    // Json::Value find_elements();
-    // Json::Value find_element_from_element();
-    // Json::Value find_elements_from_element();
-    // Json::Value find_element_from_shadow_root();
-    // Json::Value find_elements_from_shadow_root();
-    // Json::Value is_element_selected();
-    // Json::Value get_element_attribute();
-    // Json::Value get_element_property();
-    // Json::Value get_element_css_value();
-    // Json::Value get_element_text();
-    // Json::Value get_element_tag_name();
-    // Json::Value get_element_rect();
-    // Json::Value is_element_enabled();
-    // Json::Value get_computed_role();
-    // Json::Value get_computed_label();
-    // Json::Value element_click();
-    // Json::Value element_clear();
-    // Json::Value element_send_keys();
-    // Json::Value get_page_source();
+    Json::Value find_element(webdriver::selector strategy, std::string value);
+    Json::Value find_elements(webdriver::selector strategy, std::string value);
+    Json::Value find_element_from_element(std::string element_id, webdriver::selector strategy, std::string value);
+    Json::Value find_elements_from_element(std::string element_id, webdriver::selector strategy, std::string value);
+    Json::Value find_element_from_shadow_root(std::string root_id, webdriver::selector strategy, std::string value);
+    Json::Value find_elements_from_shadow_root(std::string root_id, webdriver::selector strategy, std::string value);
+    Json::Value is_element_selected(std::string element_id);
+    Json::Value get_element_attribute(std::string element_id, std::string attribute);
+    Json::Value get_element_property(std::string element_id, std::string property);
+    Json::Value get_element_css_value(std::string element_id, std::string css_value);
+    Json::Value get_element_text(std::string element_id);
+    Json::Value get_element_tag_name(std::string element_id);
+    Json::Value get_element_rect(std::string element_id);
+    Json::Value is_element_enabled(std::string element_id);
+    Json::Value get_computed_role(std::string element_id);
+    Json::Value get_computed_label(std::string element_id);
+    Json::Value element_click(std::string element_id);
+    Json::Value element_clear(std::string element_id);
+    Json::Value element_send_keys(std::string element_id, std::string text);
+    Json::Value get_page_source();
     // Json::Value execute_script();
     // Json::Value execute_async_script();
     // Json::Value get_all_cookies();
